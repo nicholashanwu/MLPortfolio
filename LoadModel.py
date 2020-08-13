@@ -45,7 +45,7 @@ sentiment_ratio = pd.DataFrame({        # DataFrame that holds the positive, neg
 })
 
 
-sentiment_df = dict()                       # array that stores the sentiment scores of every headline
+sentiment_df = []                       # array that stores the sentiment scores of every headline
 
 # load model 
 model = tf.keras.models.load_model('saved_model.h5')
@@ -89,12 +89,12 @@ def predict(text):
   
   return (result[0])
 
-def add_sentiment_to_list(text, date):
+def add_sentiment_to_list(text):
   encoded_text = encode_text(text)
   pred = np.zeros((1,250))
   pred[0] = encoded_text
-  result = model.predict(pred)
-  sentiment_df[date] = result[0][0]
+  result = model.predict(pred) 
+  sentiment_df.append(result[0][0])
   
   
 def calculate_sentiment(headline, equity):
@@ -112,9 +112,9 @@ def calculate_sentiment(headline, equity):
 
 for i in range(len(news['Headline'])):
     
-    add_sentiment_to_list(news['Headline'][i], news['Date/Time'][i])
+    add_sentiment_to_list(news['Headline'][i])
 
-    standard_deviation = np.std(list(sentiment_df.values()))
+standard_deviation = np.std(sentiment_df)
 
 for i in range(len(news['Headline'])):
     
@@ -133,7 +133,6 @@ for i in range(len(sentiment_array)):
 sentiment_ratio = sentiment_ratio.rename(index = {0: 'positive', 1: 'negative', 2: 'score', 3: 'percent positive'})
  # = sentiment_ratio['BHP'][0]/sentiment_ratio['BHP'][1]
 
-print(sentiment_df)
 
 print(sentiment_ratio.T.to_string())    
 
