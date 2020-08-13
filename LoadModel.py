@@ -18,7 +18,7 @@ VOCAB_SIZE = 88584
 MAXLEN = 250
 BATCH_SIZE = 64
 
-sentiment_array = {
+sentiment_array = {                     # array that holds the positive versus negative cumsum
     "BHP": 0,
     "CSL": 0,
     "RIO": 0,
@@ -31,21 +31,21 @@ sentiment_array = {
     "FPH": 0
     }
 
-sentiment_ratio = pd.DataFrame({
-    'BHP': pd.Series([0,0,0]),
-    'CSL': pd.Series([0,0,0]),
-    'RIO': pd.Series([0,0,0]),
-    'CBA': pd.Series([0,0,0]),
-    'WOW': pd.Series([0,0,0]),
-    'WES': pd.Series([0,0,0]),
-    'TLS': pd.Series([0,0,0]),
-    'AMC': pd.Series([0,0,0]),
-    'BXB': pd.Series([0,0,0]),
-    'FPH': pd.Series([0,0,0])
+sentiment_ratio = pd.DataFrame({        # DataFrame that holds the positive, negative, and cumsum values
+    'BHP': pd.Series([0,0,0,0]),
+    'CSL': pd.Series([0,0,0,0]),
+    'RIO': pd.Series([0,0,0,0]),
+    'CBA': pd.Series([0,0,0,0]),
+    'WOW': pd.Series([0,0,0,0]),
+    'WES': pd.Series([0,0,0,0]),
+    'TLS': pd.Series([0,0,0,0]),
+    'AMC': pd.Series([0,0,0,0]),
+    'BXB': pd.Series([0,0,0,0]),
+    'FPH': pd.Series([0,0,0,0])
 })
 
 
-sentiment_df = []
+sentiment_df = dict()                       # array that stores the sentiment scores of every headline
 
 # load model 
 model = tf.keras.models.load_model('saved_model.h5')
@@ -56,6 +56,13 @@ news = pd.read_json('Trading_news.json')
 # retrieves a dict mapping words to their index in the IMDB dataset. 
 # Keys are word strings, values are their index
 word_index = imdb.get_word_index()
+
+def loadDataFromFileDB():
+    data = pd.read_excel (r'C:/Users/nic27/OneDrive/Documents/FINS3645/Assignment Data/Option 1/ASX200top10.xlsx', sheet_name='Bloomberg raw')
+    # dataframe = pd.DataFrame(data, columns = ['Dates', 'BHP', 'CSL', 'RIO', 'CBA', 'WOW', 'WES', 'TLS', 'AMC', 'BXB', 'FPH'])
+    data = pd.DataFrame(data)
+    
+    return data
 
 def encode_text(text):
     #converts text to a sequence of words
@@ -82,32 +89,32 @@ def predict(text):
   
   return (result[0])
 
-def add_sentiment_to_list(text):
+def add_sentiment_to_list(text, date):
   encoded_text = encode_text(text)
   pred = np.zeros((1,250))
   pred[0] = encoded_text
-  result = model.predict(pred) 
-  sentiment_df.append(result[0][0])
+  result = model.predict(pred)
+  sentiment_df[date] = result[0][0]
   
   
 def calculate_sentiment(headline, equity):
     if predict(headline) > 0.5 + standard_deviation:
         sentiment_array[equity] += 1
-        
+        sentiment_ratio[equity][2] += 1.0
         sentiment_ratio[equity][0] += 1.0
         
     elif predict(headline) < 0.5 - standard_deviation:
         sentiment_array[equity] -= 1
         
+        sentiment_ratio[equity][2] -= 1.0
         sentiment_ratio[equity][1] += 1.0
-
-
+        
 
 for i in range(len(news['Headline'])):
     
-    add_sentiment_to_list(news['Headline'][i])
+    add_sentiment_to_list(news['Headline'][i], news['Date/Time'][i])
 
-standard_deviation = np.std(sentiment_df)
+    standard_deviation = np.std(list(sentiment_df.values()))
 
 for i in range(len(news['Headline'])):
     
@@ -116,18 +123,19 @@ for i in range(len(news['Headline'])):
 for x, y in sentiment_array.items():
     print(x, y)
   
-# sentiment_ratio['BHP'] = pd.to_numeric(sentiment_ratio['BHP'], downcast="float")
+sentiment_ratio['BHP'] = pd.to_numeric(sentiment_ratio['BHP'], downcast="float")
 sentiment_ratio = sentiment_ratio.apply(pd.to_numeric, downcast="float")
 
 for i in range(len(sentiment_array)):
-    sentiment_ratio.iat[2, i] = round(float(sentiment_ratio.iat[0, i])/float(sentiment_ratio.iat[1, i]), 3)
+    sentiment_ratio.iat[3, i] = round(float(sentiment_ratio.iat[0, i])/float(sentiment_ratio.iat[1, i] + sentiment_ratio.iat[0, i]), 3)
 
 
-sentiment_ratio = sentiment_ratio.rename(index = {0: 'positive', 1: 'negative', 2: 'ratio'})
+sentiment_ratio = sentiment_ratio.rename(index = {0: 'positive', 1: 'negative', 2: 'score', 3: 'percent positive'})
  # = sentiment_ratio['BHP'][0]/sentiment_ratio['BHP'][1]
 
+print(sentiment_df)
 
-print(sentiment_ratio.to_string())    
+print(sentiment_ratio.T.to_string())    
 
 # text = "good and bad"
 # encoded = encode_text(text)

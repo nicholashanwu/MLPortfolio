@@ -62,6 +62,9 @@ def main():
     
     x_date = data['Dates'].values
     y_bhp = data['BHP'].values
+    
+    plt.plot(x_date, y_bhp)
+    plt.show()
 
     
     x_date = x_date.reshape(-1,1)

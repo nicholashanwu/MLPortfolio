@@ -12,7 +12,7 @@ end_date = '2020-04-20'
 # number of assets
 noa = 10
 
-data = pd.read_excel(r'C:/Users/Nicholas/OneDrive/Documents/FINS3645/Assignment Data/Option 1/ASX200top10.xlsx', sheet_name='Bloomberg raw')
+data = pd.read_excel(r'C:/Users/nic27/OneDrive/Documents/FINS3645/Assignment Data/Option 1/ASX200top10.xlsx', sheet_name='Bloomberg raw')
 df = pd.DataFrame(data, columns =['BHP', 'CSL', 'RIO', 'CBA', 'WOW', 'WES', 'TLS', 'AMC', 'BXB', 'FPH'])
 
 #Calculate returns and covariance matrix
@@ -83,7 +83,11 @@ print(statistics(optimal_variance['x']).round(3))
 def min_func_portfolio(weights):
     return statistics(weights)[1]
 
+
+
 bnds = tuple((0, 1) for x in weights)
+bnds = ((0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1))
+
 target_returns = np.linspace(0.0, 0.25, 50)
 target_volatilities = []
 for tret in target_returns:
@@ -116,9 +120,6 @@ plt.colorbar(label = 'Sharpe ratio')
 plt.show()
 
 ###############################################################################
-
-print("target volatilities:\n", target_volatilities)
-print("target returns:\n", target_returns)
 
 ind = np.argmin(target_volatilities)        # returns index of smallest element  
 efficient_volatilities = target_volatilities[ind:]       # takes values greater than the min variance
