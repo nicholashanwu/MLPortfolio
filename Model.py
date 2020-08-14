@@ -6,6 +6,7 @@ import tensorflow as tf
 import os
 import numpy as np
 import pickle 
+import matplotlib.pyplot as plt
 
 VOCAB_SIZE = 88584
 
@@ -28,6 +29,9 @@ model.compile(loss="binary_crossentropy",optimizer="rmsprop",metrics=['acc'])
 history = model.fit(train_data, train_labels, epochs=10, validation_split=0.2)
 
 results = model.evaluate(test_data, test_labels)
+
+
+
 print(results)
 
 

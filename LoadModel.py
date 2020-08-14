@@ -45,7 +45,7 @@ sentiment_ratio = pd.DataFrame({        # DataFrame that holds the positive, neg
 })
 
 
-sentiment_df = []                       # array that stores the sentiment scores of every headline
+sentiment_df = dict()                       # array that stores the sentiment scores of every headline
 
 # load model 
 model = tf.keras.models.load_model('saved_model.h5')
@@ -89,12 +89,12 @@ def predict(text):
   
   return (result[0])
 
-def add_sentiment_to_list(text):
+def add_sentiment_to_list(text, date):
   encoded_text = encode_text(text)
   pred = np.zeros((1,250))
   pred[0] = encoded_text
-  result = model.predict(pred) 
-  sentiment_df.append(result[0][0])
+  result = model.predict(pred)
+  sentiment_df[date] = result[0][0]
   
   
 def calculate_sentiment(headline, equity):
@@ -112,9 +112,9 @@ def calculate_sentiment(headline, equity):
 
 for i in range(len(news['Headline'])):
     
-    add_sentiment_to_list(news['Headline'][i])
+    add_sentiment_to_list(news['Headline'][i], news['Date/Time'][i])
 
-standard_deviation = np.std(sentiment_df)
+    standard_deviation = np.std(list(sentiment_df.values()))
 
 for i in range(len(news['Headline'])):
     
@@ -127,14 +127,20 @@ sentiment_ratio['BHP'] = pd.to_numeric(sentiment_ratio['BHP'], downcast="float")
 sentiment_ratio = sentiment_ratio.apply(pd.to_numeric, downcast="float")
 
 for i in range(len(sentiment_array)):
-    sentiment_ratio.iat[3, i] = round(float(sentiment_ratio.iat[0, i])/float(sentiment_ratio.iat[1, i] + sentiment_ratio.iat[0, i]), 3)
+    sentiment_ratio.iat[3, i] = 100 * round(float(sentiment_ratio.iat[0, i])/float(sentiment_ratio.iat[1, i] + sentiment_ratio.iat[0, i]), 3)
 
 
-sentiment_ratio = sentiment_ratio.rename(index = {0: 'positive', 1: 'negative', 2: 'score', 3: 'percent positive'})
+sentiment_ratio = sentiment_ratio.rename(index = {0: 'positive', 1: 'negative', 2: 'score', 3: '% positive'})
  # = sentiment_ratio['BHP'][0]/sentiment_ratio['BHP'][1]
 
+# print(sentiment_df)
 
 print(sentiment_ratio.T.to_string())    
+
+sentiment_ratio = sentiment_ratio.T
+sentiment_ratio = pd.DataFrame(data = sentiment_ratio)
+
+sentiment_ratio.to_excel('Sentiments.xlsx', sheet_name = "Sentiments", index = True)
 
 # text = "good and bad"
 # encoded = encode_text(text)
@@ -143,6 +149,14 @@ print(sentiment_ratio.T.to_string())
 
 # plt.hist(sentiment_df)
 # plt.savefig('plot.png')
+
+# 30-Jan-2020 to 30-Jul-2020
+
+# find correlation of each stock with its news 
+# match dates with stock movement relative to previous day
+# if sentiment is negative, look for negative return
+
+
 
 
 

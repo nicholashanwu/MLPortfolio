@@ -17,16 +17,16 @@ df = pd.DataFrame(data, columns =['BHP', 'CSL', 'RIO', 'CBA', 'WOW', 'WES', 'TLS
 
 #Calculate returns and covariance matrix
 returns = np.log(df / df.shift(1))
-print(returns.mean() * 252)
-print(returns.cov() * 252)
+# print(returns.mean() * 252)
+# print(returns.cov() * 252)
 
 #Setup random porfolio weights
 weights = np.random.random(noa)
 weights /= np.sum(weights)
 
 #Derive Porfolio Returns & simulate various 2500x combinations
-print(np.sum(returns.mean() * weights) * 252)
-print(np.dot(weights.T, np.dot(returns.cov() * 252, weights)))
+# print(np.sum(returns.mean() * weights) * 252)
+# print(np.dot(weights.T, np.dot(returns.cov() * 252, weights)))
 
 portfolio_returns = []
 portfolio_volatility = []
@@ -66,7 +66,7 @@ optimial_sharpe_ratio = sco.minimize(min_func_sharpe, noa * [1. / noa,], method 
 
 
 print("\n***Maximization of Sharpe Ratio***")
-#print(opoptimial_sharpe_ratiots)
+
 print(optimial_sharpe_ratio['x'].round(3))
 print(statistics(optimial_sharpe_ratio['x']).round(3))
 
@@ -86,7 +86,6 @@ def min_func_portfolio(weights):
 
 
 bnds = tuple((0, 1) for x in weights)
-bnds = ((0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1))
 
 target_returns = np.linspace(0.0, 0.25, 50)
 target_volatilities = []
@@ -176,3 +175,21 @@ res = sco.minimize(min_func_portfolio, noa * [1. / noa,], method = 'SLSQP',
 
 print("\n***Optimal Tangent Portfolio***")
 print(res['x'].round(3))
+
+print("\n***Optimal Tangent Portfolio Expected Return***")
+print(f(opt[2]).round(3))
+print("\n***Optimal Tangent Portfolio Expected Volatility***")
+print(opt[2].round(3))
+
+opt_eret_evol_df = pd.DataFrame([f(opt[2]), opt[2]], columns = ['Value'], index = ['E(r)', 'sigma'])
+print(opt_eret_evol_df)
+
+opt_eret_evol_df.to_excel('Optimal Tangent Portfolio Values.xlsx', sheet_name = "OPT Values", index = True)
+
+opt_df = pd.DataFrame.from_dict(res['x'])
+opt_df = opt_df.rename(columns = {0: "Weights"}, 
+                       index = {0: "BHP", 1: "CSL", 2: "RIO", 3: "CBA", 4: "WOW", 5: "WES", 6: "TLS", 7: "AMC", 8: "BXB", 9: "FPH"})
+opt_df = opt_df.round(3)
+
+opt_df.to_excel('Optimal Tangent Portfolio.xlsx', sheet_name = "Optimal Tangent Portfolio", index = True)
+
